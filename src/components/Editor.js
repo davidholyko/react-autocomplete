@@ -1,6 +1,7 @@
 import React from 'react';
-import './App.css';
 import classNames from 'classnames';
+import AutoSuggestion from './AutoSuggestion';
+import _ from 'lodash';
 
 function useKeyPress(content, setCallback) {
   // State for keeping track of whether key is pressed
@@ -11,23 +12,12 @@ function useKeyPress(content, setCallback) {
   React.useEffect(
     () => {
       // If pressed key is our target key then set to true
-      const downHandler = (event) => {
+      const downHandler = _.debounce((event) => {
         const { key } = event;
-        console.log('!!! key down', key);
+
         setKeyPressed(true);
         setMultiKeyPressed(multiKeyPressed.add(key));
-      };
 
-      // If released key is our target key
-      // add to content passed in and then set to false
-      const upHandler = (event) => {
-        const { key } = event;
-        console.log('!!! key up', key, keyPressed);
-        if (!keyPressed && !multiKeyPressed.has(key)) {
-          return;
-        }
-        event.preventDefault();
-        setKeyPressed(false);
         switch (key) {
           case 'Tab':
             setCallback(content + '\t');
@@ -37,7 +27,7 @@ function useKeyPress(content, setCallback) {
             break;
           case 'Meta':
           case 'Shift':
-            // @todo: add uppercase
+            // Allows shift
             break;
           case 'Backspace':
             setCallback(content.substring(0, content.length - 1));
@@ -46,7 +36,16 @@ function useKeyPress(content, setCallback) {
             setCallback(content + key);
             break;
         }
+      });
 
+      // If released key is our target key
+      // add to content passed in and then set to false
+      const upHandler = (event) => {
+        const { key } = event;
+        if (!keyPressed && !multiKeyPressed.has(key)) {
+          return;
+        }
+        event.preventDefault();
         multiKeyPressed.delete(key);
         setKeyPressed(multiKeyPressed);
       };
@@ -60,14 +59,14 @@ function useKeyPress(content, setCallback) {
       };
     },
     // Empty array ensures that effect is only run on mount and unmount
-    [content, keyPressed, setCallback],
+    [content, keyPressed, setCallback, multiKeyPressed],
   );
 
   return keyPressed;
 }
 
 // eslint-disable-next-line
-const CustomEditor = (props) => {
+const Editor = (props) => {
   const [content, setContent] = React.useState('');
   const [isFocused, setFocus] = React.useState(false);
   const customEditorRef = React.useRef(null);
@@ -75,13 +74,9 @@ const CustomEditor = (props) => {
     setFocus(true);
   };
 
-  React.useEffect(
-    () => {
-      isFocused && customEditorRef.current.focus();
-    },
-    //
-    [isFocused, content],
-  );
+  React.useEffect(() => {
+    isFocused && customEditorRef.current.focus();
+  }, [isFocused]);
 
   useKeyPress(content, setContent);
 
@@ -93,12 +88,9 @@ const CustomEditor = (props) => {
     >
       {content}
       <span className="cursor">|</span>
+      <AutoSuggestion />
     </div>
   );
 };
 
-function App() {
-  return <CustomEditor />;
-}
-
-export default App;
+export default Editor;

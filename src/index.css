@@ -39,3 +39,10 @@ code {
     opacity: 1;
   }
 }
+
+.auto-suggestion {
+  border: 1px solid red;
+  min-width: 50px;
+  min-height: 50px;
+  position: absolute;
+}
