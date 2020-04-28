@@ -19,6 +19,8 @@ function useKeyPress(content, setCallback) {
         setMultiKeyPressed(multiKeyPressed.add(key));
 
         switch (key) {
+          case 'Alt':
+            break;
           case 'Tab':
             setCallback(content + '\t');
             break;
@@ -86,8 +88,18 @@ const Editor = (props) => {
       onClick={onHandleClick}
       ref={customEditorRef}
     >
-      {content}
-      <span className="cursor">|</span>
+      {content.split('\n').map((text, index) => {
+        return (
+          <div className="line" key={index}>
+            <span
+              className="text"
+              data-last-line={index === content.split('\n').length - 1}
+            >
+              {text || '\u00A0'}
+            </span>
+          </div>
+        );
+      })}
       <AutoSuggestion />
     </div>
   );
